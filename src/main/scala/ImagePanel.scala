@@ -15,11 +15,16 @@ object ImagePanel extends JPanel{
   val imgWidth : Int= img.getWidth()
   val resolution : Int = imgWidth * imgHeight
   val blur : Array[Array[Float]] = Array(Array(5, 8, 5), Array(8, 15, 8), Array(5, 8, 5))
-
+  /*
   val pixels = procUtils.imgToPixels(img)
   procUtils.thresholdHSB(pixels, 0, 100, 0, 255, 0, 250)
   procUtils.convolute(pixels, blur)
-  val out = procUtils.pixelsToImg(pixels)
+  val pixels2 = procUtils.scharr(pixels)
+  val out = procUtils.pixelsToImg(pixels2)
+  */
+  val pixels = parUtils.imgToPixels(img)
+
+  val out = parUtils.pixelsToImg(pixels)
 
 
 

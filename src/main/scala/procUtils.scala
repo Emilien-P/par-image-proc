@@ -42,11 +42,11 @@ object procUtils {
     val normFactor = kernel.toList.flatten.sum
     val kernelSize = kernel.length //kernel must be squared in this case
     for(x <- 0 until imgWidth; y <- 0 until imgHeight){
-      pixels.update(index(x, y), getBrightness(bright, kernel, normFactor, x, y))
+      pixels.update(index(x, y), Color.getHSBColor(0, 0, getBrightness(bright, kernel, normFactor, x, y)))
     }
   }
 
-  def getBrightness(bright: Array[Float], kernel : Array[Array[Float]], normFactor : Float, x : Int, y : Int) : Color= {
+  def getBrightness(bright: Array[Float], kernel : Array[Array[Float]], normFactor : Float, x : Int, y : Int) : Float = {
     val kernelSize : Int = kernel.length
     var brightness : Float = 0
     for(dx <- -(kernelSize / 2) to kernelSize / 2){
@@ -55,12 +55,35 @@ object procUtils {
         brightness += bright(index(dx + x, dy + y)) * kerVal
       }
     }
-    Color.getHSBColor(0, 0, brightness / normFactor)
+    brightness / normFactor
   }
 
   def index(x : Int, y : Int) : Int = {
     val xc = if(x < 0) 0 else if (x >= imgWidth) imgWidth - 1 else x
     val yc = if(y < 0) 0 else if (y >= imgHeight) imgHeight - 1 else y
     xc + yc * imgWidth
+  }
+
+  def scharr(pixels : Array[Color]) : Array[Color] = {
+    val vKernel : Array[Array[Float]] = Array(Array(3, 0, -3),Array(10, 0, -10), Array(3, 0, -3))
+    val hKernel : Array[Array[Float]] = Array(Array(3, 10, 3), Array(0, 0, 0), Array(-3, -10, -3))
+    val bright = pixels.map(c => Color.RGBtoHSB(c.getRed, c.getBlue, c.getGreen, null)(2))
+    val result = Array.fill[Color](resolution)(Color.black)
+    val buffer = new Array[Float](resolution)
+
+    var max : Float = 0
+    for(x <- 0 to imgWidth; y <- 0 to imgHeight){
+      val sum_h = getBrightness(bright, hKernel, 1f, x, y)
+      val sum_v = getBrightness(bright, vKernel, 1f, x, y)
+
+      val sum : Float = Math.sqrt(Math.pow(sum_h, 2) + Math.pow(sum_v, 2)).toFloat
+      max = if(max < sum) sum else max
+      buffer(index(x, y)) =  sum
+    }
+
+    for(x <- 2 to imgWidth - 2; y <- 2 to imgHeight - 2){
+      result.update(index(x, y), Color.getHSBColor(0, 0, buffer(index(x, y)) / max))
+    }
+    result
   }
 }
